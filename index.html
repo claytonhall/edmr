@@ -27,7 +27,7 @@
           font-style: normal;
           letter-spacing: 0;
           text-rendering: optimizeLegibility;
-          background: #fff;
+          background: #e2dbdb;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
           -moz-font-feature-settings: "liga" on;
@@ -45,6 +45,8 @@
       <p>
       Control using your keyboard or swipe/tap
       </p>
+      <p><em></em><small>Press F11 to enter FULLSCREEN mode</small></em></p>
+      
       <ul>
       <li>Start/Stop - Space Bar/Tap</li>
       <li>Faster - ↑</li>
@@ -166,6 +168,7 @@
             //start/stop
             hammertime.on('tap', (ev)=>startstop());
             
+
             		
             // This function will do the animation
             function move() {
@@ -199,6 +202,16 @@
               //unknown
               else{
               	console.log(`Unknown mode:${mode}`);
+              }
+            }
+
+            function openFullscreen() {
+              if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+              } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+              } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
               }
             }
         </script>
