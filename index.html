@@ -18,6 +18,7 @@
         list-style-type: none;
       }
       body {
+          user-select:none;
           color: #3c484e;
           font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Open Sans, Helvetica Neue, sans-serif;
           font-size: 1.5rem;
@@ -32,14 +33,20 @@
           -moz-font-feature-settings: "liga" on;
       }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js" integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 </head>
 
 <body>
     <center>
       <h1>EDMR</h1>
+      <a onclick="javascript:mode='HORIZONTAL';" href="javascript:void(0);">Horizontal</a>
+      <a onclick="javascript:mode='FIGURE8';" href="javascript:void(0);">Figure 8</a>
+      <p>
+      Control using your keyboard or swipe/tap
+      </p>
       <ul>
-      <li>Start/Stop - Space Bar</li>
+      <li>Start/Stop - Space Bar/Tap</li>
       <li>Faster - ↑</li>
       <li>Slower - ↓ </li>
       <li>Larger - →</li>
@@ -67,47 +74,70 @@
             var radius = 20;
             
             var run = false;
+            
+            
+            //for figure 8
+            var t = 0;
+	          var xstart = Math.floor(innerWidth/2);
+  	        var ystart = Math.floor(innerHeight/2);
+    	      var xrad = xstart-20;
+      	    var yrad = ystart-20;
 
-						onkeydown = (event) => {
-              if (event.isComposing || event.keyCode === 229) {
-    						return;
-              }
-              
-              var direction = 1;
-              if(xVelocity != 0)
-              {
-              	direction = xVelocity/Math.abs(xVelocity); //either 1 or -1
-              }
-
-              //speed up
-              if(event.keyCode === 38)
-              {
-              	xVelocity = (Math.abs(xVelocity)+1)*direction;
-              }
-              //slow down
-              else if(event.keyCode === 40)
-              {
-              		xVelocity = (Math.abs(xVelocity)-1)*direction;
-              }
-              //smaller circle
-              else if(event.keyCode === 37)
-              {
-              	radius = radius-1;
-                if(radius === 0) radius = 1;
-              }
-              //bigger circle
-              else if(event.keyCode === 39)
-              {
-              	radius++;
-                if(radius > Math.floor(innerHeight/2)) radius = Math.floor(innerHeight/2);
-              }
-              else if(event.keyCode === 32)
-              {
-              	run = !run;
+						var direction = 1;
+            
+            var mode = "HORIZONTAL";
+            
+            const speedup = function(){
+              var direction = xVelocity != 0 ? xVelocity/Math.abs(xVelocity) : 1; //either 1 or -1
+              xVelocity = (Math.abs(xVelocity)+1)*direction;
+            }
+            const slowdown = function(){
+              var direction = xVelocity != 0 ? xVelocity/Math.abs(xVelocity) : 1; //either 1 or -1
+              xVelocity = (Math.abs(xVelocity)-1)*direction;
+            }
+            const smaller = function(){
+              radius = radius-1;
+              if(radius === 0) radius = 1;
+            }
+            const bigger = function(){
+              radius++;
+              if(radius > Math.floor(innerHeight/2)) radius = Math.floor(innerHeight/2);
+            }
+            const startstop = function(){
+                run = !run;
 				        canvas.hidden = !run;
                 move();
-              }
+            }
+
+            //wire up Keyboard events
+						onkeydown = (event) => {
+              if (event.isComposing || event.keyCode === 229) return;
+              //speed up
+              if(event.keyCode === 38) speedup();
+              //slow down
+              else if(event.keyCode === 40) slowdown();
+              //smaller circle
+              else if(event.keyCode === 37) smaller();
+              //bigger circle
+              else if(event.keyCode === 39) bigger();
+              //start/stop
+              else if(event.keyCode === 32) startstop();
             };
+            
+            //wireup Touch events
+            var hammertime = new Hammer(document);
+            hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
+            //speed up
+            hammertime.on('swipeup', (ev)=>speedup());
+            //slow down
+            hammertime.on('swipedown', (ev)=>slowdown());
+            //smaller circle
+            hammertime.on('swipeleft', (ev) =>smaller());
+            //bigger circle
+            hammertime.on('swiperight', (ev)=>bigger());
+            //start/stop
+            hammertime.on('tap', (ev)=>startstop());
+            
             		
             // This function will do the animation
             function move() {
@@ -132,22 +162,42 @@
               l.font = "10px Arial";
               l.fillText(`R:${radius}/V:${Math.abs(xVelocity)}`, 0, innerHeight-10);
               
-            
+              //bounce left and right
             	// Conditions sso that the ball bounces from the edges
-            	if (radius + x > innerWidth)
-            		xVelocity = 0 - xVelocity;
-            
-            	if (x - radius < 0)
-            		xVelocity = 0 - xVelocity;
-            
-            	if (y + radius > innerHeight)
-            		yVelocity = 0 - yVelocity;
-            
-            	if (y - radius < 0)
-            		yVelocity = 0 - yVelocity;
-            
-            	x = x + xVelocity;
-            	y = y + yVelocity;
+              if(mode=="HORIZONTAL"){
+                if (radius + x > innerWidth)
+                  xVelocity = 0 - xVelocity;
+
+                if (x - radius < 0)
+                  xVelocity = 0 - xVelocity;
+
+                if (y + radius > innerHeight)
+                  yVelocity = 0 - yVelocity;
+
+                if (y - radius < 0)
+                  yVelocity = 0 - yVelocity;
+
+                x = x + xVelocity;
+                y = y + yVelocity;
+              }
+              
+              
+							//lets do a figure 8
+              //use xVelocity for speed
+              else if(mode=="FIGURE8"){
+                var dt = Math.PI / (3 * 20+(20-xVelocity));
+                x = xstart + xrad * Math.sin(t + Math.PI/2);
+                y = ystart + yrad * Math.sin(2 * t);
+
+                t += dt;
+                if (t >= 2 * Math.PI)
+                {
+                  t -= 2 * Math.PI;
+                }
+              }
+              else{
+              	console.log(`Unknown mode:${mode}`);
+              }
             }
         </script>
     </center>
