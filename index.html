@@ -23,7 +23,7 @@
         overscroll-behavior: contain;
         /* disable text selection */
         user-select:none;
-        
+
         color: #3c484e;
         font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Open Sans, Helvetica Neue, sans-serif;
         font-size: 1.5rem;
@@ -160,7 +160,7 @@
             };
             
             //wireup Touch events
-            var hammertime = new Hammer(document);
+            var hammertime = new Hammer(canvas);
             hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
             //speed up
             hammertime.on('swipeup', (ev)=>speedup());
@@ -170,8 +170,13 @@
             hammertime.on('swipeleft', (ev) =>smaller());
             //bigger circle
             hammertime.on('swiperight', (ev)=>bigger());
+            
             //start/stop
-            hammertime.on('tap', (ev)=>startstop());
+            //hammertime.on('tap', (ev)=>startstop());
+            //and start/stop on document level
+            var hammerdoc = new Hammer(document);
+            hammerdoc.on('tap', (ev)=>startstop());
+            
             
 
             		
