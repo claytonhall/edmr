@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>
+        EDMR
+    </title>
+    <style>
+        canvas {
+        	background-color: #000000;
+        	width: 100%;
+        	height: 100%;
+        	position: absolute;
+        	top: 0px;
+        	left: 0px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <center>
+        <h1>edmr</h1>
+        <h3>Bouncing ball using JavaScript</h3>
+        <canvas>
+        </canvas>
+        <script>
+            var canvas = document.querySelector("canvas");
+            canvas.hidden = true;
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            var l = canvas.getContext('2d');
+            
+            // x and y are the co-ordinates of the circle
+            
+            // vx and vy are the respective speeds
+            
+            var x = Math.floor(Math.random() * innerWidth);
+            console.log(`x:${x}`);
+            //var x = 1;
+            //var y = Math.floor(Math.random() * innerHeight);
+            var y = Math.floor(canvas.height * 0.5)
+            console.log(`y:${y}`);
+            
+            var xVelocity = 20; //Math.floor(Math.random() * 8);
+            var yVelocity = 0;
+            var radius = 20;
+            
+            var run = false;
+
+						onkeydown = (event) => {
+              if (event.isComposing || event.keyCode === 229) {
+    						return;
+              }
+              
+              var direction = 1;
+              if(xVelocity != 0)
+              {
+              	direction = xVelocity/Math.abs(xVelocity); //either 1 or -1
+              }
+              
+              console.log(event.keyCode);
+              
+              //speed up
+              if(event.keyCode === 38)
+              {
+              	xVelocity = (Math.abs(xVelocity)+1)*direction;
+              }
+              //slow down
+              else if(event.keyCode === 40)
+              {
+              		xVelocity = (Math.abs(xVelocity)-1)*direction;
+              }
+              //smaller circle
+              else if(event.keyCode === 37)
+              {
+              	radius = radius-1;
+                if(radius === 0) radius = 1;
+              }
+              //bigger circle
+              else if(event.keyCode === 39)
+              {
+              	radius++;
+                if(radius > Math.floor(innerHeight/2)) radius = Math.floor(innerHeight/2);
+              }
+              else if(event.keyCode === 32)
+              {
+              	run = !run;
+				        canvas.hidden = !run;
+                move();
+              }
+            };
+
+
+            //if(run)
+            //{
+            //	move();
+            //}
+            		
+            // This function will do the animation
+            function move() {
+              if(!run) return;
+              
+            	requestAnimationFrame(move);
+              
+            
+            	// It clears the specified pixels within
+            	// the given rectangle
+            	l.clearRect(0, 0, innerWidth, innerHeight);
+            
+            	// Creating a circle
+            	l.beginPath();
+            	l.strokeStyle = "white";
+            	l.arc(x, y, radius, 0, Math.PI * 2, false);
+            	l.fillStyle="white";
+            	l.fill();
+            	l.stroke();
+              
+              l.fillStyle="#A9A9A9"
+              l.font = "10px Arial";
+              l.fillText(`R:${radius}/V:${Math.abs(xVelocity)}`, 0, innerHeight-10);
+              
+            
+            	// Conditions sso that the ball bounces
+            	// from the edges
+            	if (radius + x > innerWidth)
+            		xVelocity = 0 - xVelocity;
+            
+            	if (x - radius < 0)
+            		xVelocity = 0 - xVelocity;
+            
+            	if (y + radius > innerHeight)
+            		yVelocity = 0 - yVelocity;
+            
+            	if (y - radius < 0)
+            		yVelocity = 0 - yVelocity;
+            
+            	x = x + xVelocity;
+            	y = y + yVelocity;
+            }
+        </script>
+    </center>
+</body>
+
+</html>
