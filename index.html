@@ -57,10 +57,8 @@
         <script>
             var canvas = document.querySelector("canvas");
             canvas.hidden = true;
-            
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            
             var l = canvas.getContext('2d');
             
             // x and y are the co-ordinates of the circle
@@ -83,9 +81,39 @@
     	      var xrad = xstart-20;
       	    var yrad = ystart-20;
 
-						var direction = 1;
+						//var direction = 1;
             
             var mode = "HORIZONTAL";
+
+            const moveHorizontal=function() {
+                //handle bouncing
+                if (radius + x > innerWidth)
+                  xVelocity = 0 - xVelocity;
+                
+                if (x - radius < 0)
+                  xVelocity = 0 - xVelocity;
+
+                if (y + radius > innerHeight)
+                  yVelocity = 0 - yVelocity;
+
+                if (y - radius < 0)
+                  yVelocity = 0 - yVelocity;
+
+                x = x + xVelocity;
+                y = y + yVelocity;
+            }
+
+            const moveFigure8=function() {
+              var dt = Math.PI / (3 * 20+(20-xVelocity));
+                x = xstart + xrad * Math.sin(t + Math.PI/2);
+                y = ystart + yrad * Math.sin(2 * t);
+
+                t += dt;
+                if (t >= 2 * Math.PI)
+                {
+                  t -= 2 * Math.PI;
+                }
+            }
             
             const speedup = function(){
               var direction = xVelocity != 0 ? xVelocity/Math.abs(xVelocity) : 1; //either 1 or -1
@@ -164,37 +192,11 @@
               
               //bounce left and right
             	// Conditions sso that the ball bounces from the edges
-              if(mode=="HORIZONTAL"){
-                if (radius + x > innerWidth)
-                  xVelocity = 0 - xVelocity;
-
-                if (x - radius < 0)
-                  xVelocity = 0 - xVelocity;
-
-                if (y + radius > innerHeight)
-                  yVelocity = 0 - yVelocity;
-
-                if (y - radius < 0)
-                  yVelocity = 0 - yVelocity;
-
-                x = x + xVelocity;
-                y = y + yVelocity;
-              }
-              
-              
-							//lets do a figure 8
+              if(mode=="HORIZONTAL") moveHorizontal();
+              //lets do a figure 8
               //use xVelocity for speed
-              else if(mode=="FIGURE8"){
-                var dt = Math.PI / (3 * 20+(20-xVelocity));
-                x = xstart + xrad * Math.sin(t + Math.PI/2);
-                y = ystart + yrad * Math.sin(2 * t);
-
-                t += dt;
-                if (t >= 2 * Math.PI)
-                {
-                  t -= 2 * Math.PI;
-                }
-              }
+              else if(mode=="FIGURE8") moveFigure8();
+              //unknown
               else{
               	console.log(`Unknown mode:${mode}`);
               }
