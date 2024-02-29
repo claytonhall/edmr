@@ -3,7 +3,7 @@
 
 <head>
     <title>
-        EDMR
+        EMDR
     </title>
     <style>
       canvas {
@@ -37,106 +37,155 @@
         -moz-osx-font-smoothing: grayscale;
         -moz-font-feature-settings: "liga" on;
       }
+
+      a.modeOption{
+        font: size 0.6em;
+      }
   </style>
+
+  <!--Use hammer.js for touch input-->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js" integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 </head>
 
 <body>
     <center>
-      <h1>EDMR</h1>
-      <a onclick="javascript:mode='HORIZONTAL';" href="javascript:void(0);">Horizontal</a>
-      <a onclick="javascript:mode='FIGURE8';" href="javascript:void(0);">Figure 8</a>
-      <p>
-      Control using your keyboard or swipe/tap
-      </p>
-      <p><em></em><small>Press F11 to enter FULLSCREEN mode</small></em></p>
-      
-      <ul>
-      <li>Start/Stop - Space Bar/Tap</li>
-      <li>Faster - ↑</li>
-      <li>Slower - ↓ </li>
-      <li>Larger - →</li>
-      <li>Smaller - ←</li>
-      </ul>
+      <h1>EMDR</h1>
+      <div style="line-height:1 ;">
+        <a class="modeOption" id="horizontalLink" data-value="HORIZONTAL" href="javascript:void(0);">Horizontal</a>
+        <a class="modeOption" id="figure8Link" data-value="FIGURE8" href="javascript:void(0);">Figure 8</a>
+        <br/>
+        <span style="font-size:0.6em">Press F11 to enter <a href="javascript:void();" onclick="openFullscreen(document.documentElement);">FULLSCREEN</a> mode</span>
+        <br/>
+        <span style="font-size:0.6em">Mode:</span><span id="modeSpan" style="font-size:0.6em">HORIZONTAL</span>
+      </div>
+      <div id="touchDiv">
+        <span>
+          Control using your keyboard or swipe/tap
+        </span>
+        
+        <ul>
+        <li>Start/Stop - Space Bar/Tap</li>
+        <li>Faster - ↑</li>
+        <li>Slower - ↓ </li>
+        <li>Larger - →</li>
+        <li>Smaller - ←</li>
+        </ul>
+      </div>
         <canvas>
         </canvas>
         <script>
+            class Motion {
+              constructor() {
+                // x and y are the co-ordinates of the circle
+                this.x = Math.floor(Math.random() * innerWidth);
+                this.y = Math.floor(canvas.height * 0.5);
+
+                this.defaultVelocity = 20;
+                this.xVelocity = this.defaultVelocity; //only horizontal
+                this.yVelocity = 0;
+                this.radius = 20;
+              }
+
+              move() {
+                
+              }
+            }
+
+            class HorizontalMotion extends Motion {
+              constructor() {
+                super();
+              }
+
+              move() {
+                //handle bouncing
+                if (this.radius + this.x > innerWidth)
+                  this.xVelocity = 0 - this.xVelocity;
+                
+                if (this.x - this.radius < 0)
+                  this.xVelocity = 0 - this.xVelocity;
+
+                if (this.y + this.radius > innerHeight)
+                  this.yVelocity = 0 - this.yVelocity;
+
+                if (this.y - this.radius < 0)
+                  this.yVelocity = 0 - this.yVelocity;
+
+                  this.x = this.x + this.xVelocity;
+                  this.y = this.y + this.yVelocity;
+              }
+            }
+
+            class Figure8Motion extends Motion {
+              constructor() {
+                super();
+                //for figure 8
+                this.t = 0;
+                this.xstart = Math.floor(innerWidth/2);
+                this.ystart = Math.floor(innerHeight/2);
+                this.xrad = this.xstart-100;
+                this.yrad = this.ystart-100;
+              }
+              
+              move() {
+                //https://forum.gamemaker.io/index.php?threads/how-to-make-an-object-move-in-a-figure-8-motion.50022/
+                this.x = this.xstart + this.xrad * Math.sin(this.t + Math.PI/2);
+                this.y = this.ystart + this.yrad * Math.sin(2 * this.t);
+
+                if(isNaN(this.x) || isNaN(this.y)){
+                  this.x = this.xstart;
+                  this.y = this.ystart;
+                  this.t = 0;
+                }
+
+                var dt = Math.PI / (3 * (20+(20-this.xVelocity)));
+                this.t += dt;
+                if (this.t >= 2 * Math.PI)
+                {
+                  this.t -= 2 * Math.PI;
+                }
+              }
+            }
+
+
             var canvas = document.querySelector("canvas");
             canvas.hidden = true;
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             var l = canvas.getContext('2d');
-            
-            // x and y are the co-ordinates of the circle
-            var x = Math.floor(Math.random() * innerWidth);
-            var y = Math.floor(canvas.height * 0.5)
-            
-            // xVelocity and yVelocity are the respective speeds
-            var xVelocity = 20; //only horizontal
-            var yVelocity = 0;
-            
-            var radius = 20;
-            
+
             var run = false;
-            
-            
-            //for figure 8
-            var t = 0;
-	          var xstart = Math.floor(innerWidth/2);
-  	        var ystart = Math.floor(innerHeight/2);
-    	      var xrad = xstart-20;
-      	    var yrad = ystart-20;
+           
+            var motion = null;
+            document.getElementById("horizontalLink").onclick = function(){ 
+              motion = new HorizontalMotion();
+              mode = this.getAttribute("data-value");
+              document.getElementById("modeSpan").innerText = mode;
+            };
 
-						//var direction = 1;
-            
-            var mode = "HORIZONTAL";
+            document.getElementById("figure8Link").onclick = function(){ 
+              motion = new Figure8Motion() ;
+              mode = this.getAttribute("data-value");
+              document.getElementById("modeSpan").innerText = mode;
+            };
+            document.getElementById("horizontalLink").click();
 
-            const moveHorizontal=function() {
-                //handle bouncing
-                if (radius + x > innerWidth)
-                  xVelocity = 0 - xVelocity;
-                
-                if (x - radius < 0)
-                  xVelocity = 0 - xVelocity;
-
-                if (y + radius > innerHeight)
-                  yVelocity = 0 - yVelocity;
-
-                if (y - radius < 0)
-                  yVelocity = 0 - yVelocity;
-
-                x = x + xVelocity;
-                y = y + yVelocity;
-            }
-
-            const moveFigure8=function() {
-              var dt = Math.PI / (3 * 20+(20-xVelocity));
-                x = xstart + xrad * Math.sin(t + Math.PI/2);
-                y = ystart + yrad * Math.sin(2 * t);
-
-                t += dt;
-                if (t >= 2 * Math.PI)
-                {
-                  t -= 2 * Math.PI;
-                }
-            }
             
             const speedup = function(){
-              var direction = xVelocity != 0 ? xVelocity/Math.abs(xVelocity) : 1; //either 1 or -1
-              xVelocity = (Math.abs(xVelocity)+1)*direction;
+              var direction = motion.xVelocity != 0 ? motion.xVelocity/Math.abs(motion.xVelocity) : 1; //either 1 or -1
+              motion.xVelocity = (Math.abs(motion.xVelocity)+1)*direction;
             }
             const slowdown = function(){
-              var direction = xVelocity != 0 ? xVelocity/Math.abs(xVelocity) : 1; //either 1 or -1
-              xVelocity = (Math.abs(xVelocity)-1)*direction;
+              var direction = motion.xVelocity != 0 ? motion.xVelocity/Math.abs(motion.xVelocity) : 1; //either 1 or -1
+              motion.xVelocity = (Math.abs(motion.xVelocity)-1)*direction;
             }
             const smaller = function(){
-              radius = radius-1;
-              if(radius === 0) radius = 1;
+              motion.radius = motion.radius-1;
+              if(motion.radius === 0) motion.radius = 1;
             }
             const bigger = function(){
-              radius++;
-              if(radius > Math.floor(innerHeight/2)) radius = Math.floor(innerHeight/2);
+              motion.radius++;
+              if(motion.radius > Math.floor(innerHeight/2)) motion.radius = Math.floor(innerHeight/2);
             }
             const startstop = function(){
                 run = !run;
@@ -172,13 +221,10 @@
             hammertime.on('swiperight', (ev)=>bigger());
             
             //start/stop
-            //hammertime.on('tap', (ev)=>startstop());
+            hammertime.on('tap', (ev)=>startstop());
             //and start/stop on document level
-            var hammerdoc = new Hammer(document);
+            var hammerdoc = new Hammer(document.getElementById("touchDiv"));
             hammerdoc.on('tap', (ev)=>startstop());
-            
-            
-
             		
             // This function will do the animation
             function move() {
@@ -186,7 +232,6 @@
               
             	requestAnimationFrame(move);
               
-            
             	// It clears the specified pixels within
             	// the given rectangle
             	l.clearRect(0, 0, innerWidth, innerHeight);
@@ -194,28 +239,18 @@
             	// Creating a circle
             	l.beginPath();
             	l.strokeStyle = "white";
-            	l.arc(x, y, radius, 0, Math.PI * 2, false);
+            	l.arc(motion.x, motion.y, motion.radius, 0, Math.PI * 2, false);
             	l.fillStyle="white";
             	l.fill();
             	l.stroke();
-              
               l.fillStyle="#A9A9A9"
               l.font = "10px Arial";
-              l.fillText(`R:${radius}/V:${Math.abs(xVelocity)}`, 0, innerHeight-10);
-              
-              //bounce left and right
-            	// Conditions sso that the ball bounces from the edges
-              if(mode=="HORIZONTAL") moveHorizontal();
-              //lets do a figure 8
-              //use xVelocity for speed
-              else if(mode=="FIGURE8") moveFigure8();
-              //unknown
-              else{
-              	console.log(`Unknown mode:${mode}`);
-              }
+              l.fillText(`R:${motion.radius}/V:${Math.abs(motion.xVelocity)}`, 0, innerHeight-10);
+
+              motion.move();
             }
 
-            function openFullscreen() {
+            function openFullscreen(elem) {
               if (elem.requestFullscreen) {
                 elem.requestFullscreen();
               } else if (elem.webkitRequestFullscreen) { /* Safari */
